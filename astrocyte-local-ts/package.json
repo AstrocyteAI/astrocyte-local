@@ -16,7 +16,13 @@
     "lint": "eslint src/",
     "mcp": "tsx src/mcp-server.ts"
   },
-  "keywords": ["astrocyte", "memory", "mcp", "ai-agent", "context-tree"],
+  "keywords": [
+    "astrocyte",
+    "memory",
+    "mcp",
+    "ai-agent",
+    "context-tree"
+  ],
   "author": "AstrocyteAI",
   "license": "Apache-2.0",
   "repository": {
@@ -27,10 +33,11 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^2.0.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "better-sqlite3": "^11.0.0",
+    "commander": "^13.0.0",
     "yaml": "^2.4.0",
-    "commander": "^13.0.0"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.0",
@@ -39,5 +46,10 @@
     "tsx": "^4.0.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "better-sqlite3"
+    ]
   }
 }

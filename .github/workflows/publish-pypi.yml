@@ -3,7 +3,7 @@ name: Publish astrocyte-local to PyPI
 on:
   push:
     tags:
-      - "v*"  # Triggers on version tags: v0.1.0, v1.0.0, etc.
+      - "py-v*"  # Triggers on: py-v0.1.0, py-v1.0.0, etc.
 
 permissions:
   id-token: write    # Required for Trusted Publishing (OIDC) + attestations
@@ -40,7 +40,7 @@ jobs:
 
       - name: Extract version from tag
         id: version
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: echo "version=${GITHUB_REF_NAME#py-v}" >> "$GITHUB_OUTPUT"
 
       - name: Build package
         working-directory: astrocyte-local-py

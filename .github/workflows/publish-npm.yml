@@ -1,0 +1,124 @@
+name: Publish @astrocyteai/local to npm
+
+on:
+  push:
+    tags:
+      - "ts-v*"  # Triggers on: ts-v0.1.0, ts-v1.0.0, etc.
+
+permissions:
+  id-token: write    # Required for npm provenance + attestations
+  contents: read
+  attestations: write  # Required for actions/attest-build-provenance
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: "astrocyte-local-ts/pnpm-lock.yaml"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        working-directory: astrocyte-local-ts
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        working-directory: astrocyte-local-ts
+        run: pnpm build
+
+      - name: Run tests
+        working-directory: astrocyte-local-ts
+        run: pnpm test -- --run
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#ts-v}" >> "$GITHUB_OUTPUT"
+
+      - name: Set package version
+        working-directory: astrocyte-local-ts
+        run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version
+
+      - name: Pack tarball
+        working-directory: astrocyte-local-ts
+        run: pnpm pack
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: npm-dist
+          path: astrocyte-local-ts/*.tgz
+
+  attest:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      attestations: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: npm-dist
+          path: dist/
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: "dist/*.tgz"
+
+  publish:
+    needs: [build, attest]
+    runs-on: ubuntu-latest
+    environment: release  # Must match the npm Trusted Publisher / environment config
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: npm-dist
+          path: dist/
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#ts-v}" >> "$GITHUB_OUTPUT"
+
+      - name: Check if version already exists on npm
+        id: check
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          echo "version=$VERSION"
+          STATUS=$(npm view @astrocyteai/local@$VERSION version 2>/dev/null || echo "not-found")
+          if [ "$STATUS" = "$VERSION" ]; then
+            echo "Version $VERSION already exists on npm — skipping upload"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Version $VERSION not on npm — proceeding with upload"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to npm
+        if: steps.check.outputs.skip != 'true'
+        run: npm publish dist/*.tgz --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

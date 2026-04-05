@@ -6,5 +6,16 @@
 
 export { ContextTree } from "./context-tree.js";
 export { SearchEngine } from "./search.js";
-export { startMcpServer } from "./mcp-server.js";
-export type { MemoryEntry, SearchHit, RetainResult } from "./types.js";
+export { createMcpServer, startMcpServer } from "./mcp-server.js";
+export type { McpServerOptions } from "./mcp-server.js";
+export { curateLocalRetain, parseResponse } from "./curated-retain.js";
+export type { LLMProvider, CurationDecision } from "./curated-retain.js";
+export { LocalRecallCache, LocalTieredRetriever } from "./tiered-retrieval.js";
+export type {
+  MemoryEntry,
+  SearchHit,
+  RetainResult,
+  RecallResult,
+  BrowseResult,
+  LocalConfig,
+} from "./types.js";
