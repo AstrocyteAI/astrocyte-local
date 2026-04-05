@@ -2,13 +2,13 @@
 
 **Zero-infrastructure, local-first memory for AI Agents.** Store, search, and recall memories as local markdown files — no database, no embeddings, no API keys.
 
-Astrocyte Local is the client-side companion to [Astrocyte](https://github.com/AstrocyteAI/astrocyte), the open-source memory framework for AI agents. It provides persistent memory for single-user coding agents (Claude Code, Cursor, Windsurf) using a hierarchical Context Tree stored as plain markdown files.
+Astrocyte Local is the client-side companion to [Astrocyte](https://github.com/AstrocyteAI/astrocyte), the open-source memory framework for AI agents. It provides persistent, single-user memory as a hierarchical Context Tree of plain markdown files — exposed via MCP, CLI, and libraries. Common MCP hosts include Claude Code, Cursor, and Windsurf; any MCP-capable agent or tool can use the same interface.
 
 ## Implementations
 
 | Language | Package | Primary use case | Status |
 |---|---|---|---|
-| **TypeScript** | [`@astrocyteai/local`](astrocyte-local-ts/) (npm) | MCP server for coding agents | Phase 1 |
+| **TypeScript** | [`@astrocyteai/local`](astrocyte-local-ts/) (npm) | MCP server for AI agents and tools | Phase 1 |
 | **Python** | [`astrocyte-local`](astrocyte-local-py/) (PyPI) | Library + Astrocyte framework integration | Phase 2 |
 | **Rust** | [`astrocyte-local`](astrocyte-local-rs/) (crates.io) | Fast CLI + single binary MCP server | Phase 3 |
 
