@@ -1,0 +1,113 @@
+name: Publish astrocyte-local to PyPI
+
+on:
+  push:
+    tags:
+      - "v*"  # Triggers on version tags: v0.1.0, v1.0.0, etc.
+
+permissions:
+  id-token: write    # Required for Trusted Publishing (OIDC) + attestations
+  contents: read
+  attestations: write  # Required for actions/attest-build-provenance
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # Full history needed for hatch-vcs to find tags
+
+      - uses: astral-sh/setup-uv@v8.0.0
+        with:
+          version: "latest"
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        working-directory: astrocyte-local-py
+        run: uv sync --extra dev
+
+      - name: Run tests
+        working-directory: astrocyte-local-py
+        run: uv run python -m pytest tests/ -x --tb=short
+
+      - name: Run lint
+        working-directory: astrocyte-local-py
+        run: uv run ruff check astrocyte_local/ tests/
+
+      - name: Extract version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build package
+        working-directory: astrocyte-local-py
+        env:
+          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ steps.version.outputs.version }}
+        run: uv build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: astrocyte-local-py/dist/
+
+  # Attestation step — signs artifacts BEFORE uploading to PyPI.
+  # Uses GitHub's native attestation (not pypi-publish's built-in).
+  # Decoupled from upload so a failed upload doesn't burn the filename.
+  attest:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      attestations: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: "dist/astrocyte_local-*"
+
+  publish:
+    needs: [build, attest]
+    runs-on: ubuntu-latest
+    environment: release  # Must match the PyPI Trusted Publisher config
+    permissions:
+      id-token: write
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+
+      - name: Check if version already exists on PyPI
+        id: check
+        run: |
+          VERSION=$(ls dist/*.whl | head -1 | sed 's/.*astrocyte_local-\(.*\)-py3.*/\1/')
+          echo "version=$VERSION"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/astrocyte-local/$VERSION/json")
+          if [ "$STATUS" = "200" ]; then
+            echo "Version $VERSION already exists on PyPI — skipping upload"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Version $VERSION not on PyPI — proceeding with upload"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to PyPI
+        if: steps.check.outputs.skip != 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          verbose: true
+          attestations: false
+        # pypi-publish attestations disabled — we use GitHub's native
+        # actions/attest-build-provenance instead (attest job above).
+        # Trusted Publishing (OIDC) handles authentication.
