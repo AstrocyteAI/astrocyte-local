@@ -1,0 +1,43 @@
+{
+  "name": "@astrocyteai/local",
+  "version": "0.1.0",
+  "description": "Zero-infrastructure memory for AI coding agents — Context Tree + FTS5 search",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "astrocyte-local": "dist/cli.js",
+    "astrocyte-local-mcp": "dist/mcp-server.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "lint": "eslint src/",
+    "mcp": "tsx src/mcp-server.ts"
+  },
+  "keywords": ["astrocyte", "memory", "mcp", "ai-agent", "context-tree"],
+  "author": "AstrocyteAI",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AstrocyteAI/astrocyte-local"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^2.0.0",
+    "better-sqlite3": "^11.0.0",
+    "yaml": "^2.4.0",
+    "commander": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/node": "^22.0.0",
+    "eslint": "^9.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}

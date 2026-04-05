@@ -1,0 +1,33 @@
+# OS
+.DS_Store
+
+# Python (astrocyte-local-py)
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Node (astrocyte-local-ts)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+dist/
+
+# Rust (astrocyte-local-rs)
+target/
+
+# IDE / editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
