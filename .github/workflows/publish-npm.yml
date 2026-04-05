@@ -117,8 +117,11 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Ensure latest npm (>=11.5.1 for Trusted Publishing)
+        run: npm install -g npm@latest
+
       - name: Publish to npm
         if: steps.check.outputs.skip != 'true'
         run: npm publish dist/*.tgz --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # No NODE_AUTH_TOKEN needed — uses OIDC Trusted Publishing.
+        # Requires one-time setup at https://www.npmjs.com/package/@astrocyteai/local/access
